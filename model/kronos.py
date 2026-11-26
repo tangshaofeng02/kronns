@@ -481,7 +481,7 @@ def calc_time_stamps(x_timestamp):
 
 class KronosPredictor:
 
-    def __init__(self, model, tokenizer, device=None, max_context=512, clip=5):
+    def __init__(self, model, tokenizer, device=None, max_context=512, clip=5, feature_list=None):
         self.tokenizer = tokenizer
         self.model = model
         self.max_context = max_context
@@ -489,7 +489,10 @@ class KronosPredictor:
         self.price_cols = ['open', 'high', 'low', 'close']
         self.vol_col = 'volume'
         self.amt_vol = 'amount'
+        self.fund_cols = ['main_net_inflow', 'huge_net_inflow', 'main_net_inflow_ratio']
         self.time_cols = ['minute', 'hour', 'weekday', 'day', 'month']
+        # 可配置 feature_list，兼容 6维 和 9维
+        self.feature_list = feature_list or (self.price_cols + [self.vol_col, self.amt_vol])
         
         # Auto-detect device if not specified
         if device is None:
@@ -526,18 +529,23 @@ class KronosPredictor:
 
         df = df.copy()
         if self.vol_col not in df.columns:
-            df[self.vol_col] = 0.0  # Fill missing volume with zeros
-            df[self.amt_vol] = 0.0  # Fill missing amount with zeros
+            df[self.vol_col] = 0.0
+            df[self.amt_vol] = 0.0
         if self.amt_vol not in df.columns and self.vol_col in df.columns:
             df[self.amt_vol] = df[self.vol_col] * df[self.price_cols].mean(axis=1)
+        # 填充缺失的资金流列
+        for col in self.fund_cols:
+            if col not in df.columns:
+                df[col] = 0.0
 
-        if df[self.price_cols + [self.vol_col, self.amt_vol]].isnull().values.any():
-            raise ValueError("Input DataFrame contains NaN values in price or volume columns.")
+        feat_cols = self.feature_list
+        if df[feat_cols].isnull().values.any():
+            raise ValueError("Input DataFrame contains NaN values in feature columns.")
 
         x_time_df = calc_time_stamps(x_timestamp)
         y_time_df = calc_time_stamps(y_timestamp)
 
-        x = df[self.price_cols + [self.vol_col, self.amt_vol]].values.astype(np.float32)
+        x = df[feat_cols].values.astype(np.float32)
         x_stamp = x_time_df.values.astype(np.float32)
         y_stamp = y_time_df.values.astype(np.float32)
 
@@ -555,7 +563,7 @@ class KronosPredictor:
         preds = preds.squeeze(0)
         preds = preds * (x_std + 1e-5) + x_mean
 
-        pred_df = pd.DataFrame(preds, columns=self.price_cols + [self.vol_col, self.amt_vol], index=y_timestamp)
+        pred_df = pd.DataFrame(preds, columns=feat_cols, index=y_timestamp)
         return pred_df
 
 

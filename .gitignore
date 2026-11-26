@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.csv
 .Python
 build/
 develop-eggs/
@@ -58,6 +59,9 @@ Desktop.ini
 # Logs
 *.log
 logs/
+
+# 涨停板分析数据 (每日生成, 体量较大)
+limit_up_data/
 
 # Environment
 .env

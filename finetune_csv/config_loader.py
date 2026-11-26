@@ -127,6 +127,7 @@ class CustomFinetuneConfig:
         self.train_ratio = data_config.get('train_ratio', 0.9)
         self.val_ratio = data_config.get('val_ratio', 0.1)
         self.test_ratio = data_config.get('test_ratio', 0.0)
+        self.feature_list = data_config.get('feature_list', ['open', 'high', 'low', 'close', 'volume', 'amount'])
         
         # training configuration
         training_config = self.loader.get_training_config()
@@ -212,7 +213,9 @@ class CustomFinetuneConfig:
             'accumulation_steps': self.accumulation_steps,
             'pretrained_model_path': self.pretrained_tokenizer_path,
             'save_path': self.tokenizer_save_path,
-            'use_comet': self.use_comet
+            'use_comet': self.use_comet,
+            'feature_list': self.feature_list,
+            'd_in': len(self.feature_list)
         }
     
     def get_basemodel_config(self):
@@ -239,7 +242,9 @@ class CustomFinetuneConfig:
             'pretrained_tokenizer_path': self.finetuned_tokenizer_path,
             'pretrained_predictor_path': self.pretrained_predictor_path,
             'save_path': self.basemodel_save_path,
-            'use_comet': self.use_comet
+            'use_comet': self.use_comet,
+            'feature_list': self.feature_list,
+            'd_in': len(self.feature_list)
         }
     
     def print_config_summary(self):

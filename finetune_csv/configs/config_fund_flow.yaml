@@ -1,0 +1,69 @@
+# 资金流特征微调配置 (d_in=9)
+# 特征: open, high, low, close, volume, amount + 主力净流入, 超大单净流入, 主力净流入占比
+
+data:
+  data_path: "./finetune_csv/data/stock_with_fund_flow.csv"
+  feature_list:
+    - open
+    - high
+    - low
+    - close
+    - volume
+    - amount
+    - main_net_inflow
+    - huge_net_inflow
+    - main_net_inflow_ratio
+  lookback_window: 120
+  predict_window: 10
+  max_context: 512
+  clip: 5.0
+  train_ratio: 0.85
+  val_ratio: 0.15
+  test_ratio: 0.0
+
+training:
+  tokenizer_epochs: 30
+  basemodel_epochs: 20
+  batch_size: 32
+  log_interval: 50
+  num_workers: 0
+  seed: 42
+
+  tokenizer_learning_rate: 0.0002
+  predictor_learning_rate: 0.00004
+
+  adam_beta1: 0.9
+  adam_beta2: 0.95
+  adam_weight_decay: 0.1
+
+  accumulation_steps: 1
+
+model_paths:
+  pretrained_tokenizer: "./pretrained/Kronos-Tokenizer-fundflow"
+  pretrained_predictor: "./pretrained/Kronos-base"
+
+  exp_name: "fundflow_finetune"
+  base_path: "./finetune_csv/finetuned/"
+
+  base_save_path: ""
+  finetuned_tokenizer: ""
+
+  tokenizer_save_name: "tokenizer"
+  basemodel_save_name: "basemodel"
+
+experiment:
+  name: "kronos_fundflow_finetune"
+  description: "Kronos微调：加入主力资金流特征(d_in=9)"
+  use_comet: false
+
+  train_tokenizer: true
+  train_basemodel: true
+  skip_existing: false
+
+  # 从零训练tokenizer（d_in=6→9，旧权重不兼容）
+  pre_trained_tokenizer: false
+  pre_trained_predictor: false
+
+device:
+  use_cuda: false
+  device_id: 0

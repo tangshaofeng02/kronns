@@ -24,8 +24,9 @@ from config_loader import CustomFinetuneConfig
 
 class CustomKlineDataset(Dataset):
     
-    def __init__(self, data_path, data_type='train', lookback_window=90, predict_window=10, 
-                 clip=5.0, seed=100, train_ratio=0.7, val_ratio=0.15, test_ratio=0.15):
+    def __init__(self, data_path, data_type='train', lookback_window=90, predict_window=10,
+                 clip=5.0, seed=100, train_ratio=0.7, val_ratio=0.15, test_ratio=0.15,
+                 feature_list=None):
         self.data_path = data_path
         self.data_type = data_type
         self.lookback_window = lookback_window
@@ -36,8 +37,8 @@ class CustomKlineDataset(Dataset):
         self.train_ratio = train_ratio
         self.val_ratio = val_ratio
         self.test_ratio = test_ratio
-        
-        self.feature_list = ['open', 'high', 'low', 'close', 'volume', 'amount']
+
+        self.feature_list = feature_list or ['open', 'high', 'low', 'close', 'volume', 'amount']
         self.time_feature_list = ['minute', 'hour', 'weekday', 'day', 'month']
         
         self.py_rng = random.Random(seed)
@@ -67,7 +68,7 @@ class CustomKlineDataset(Dataset):
         
         if self.data.isnull().any().any():
             print("Warning: Missing values found in data, performing forward fill")
-            self.data = self.data.fillna(method='ffill')
+            self.data = self.data.ffill()
         
         print(f"Original data time range: {self.timestamps.min()} to {self.timestamps.max()}")
         print(f"Original data total length: {len(df)} records")
@@ -181,7 +182,12 @@ def setup_logging(exp_name: str, log_dir: str, rank: int = 0) -> logging.Logger:
 def create_dataloaders(config):
     if not dist.is_available() or not dist.is_initialized() or dist.get_rank() == 0:
         print("Creating data loaders...")
-    
+
+    feature_list = getattr(config, 'feature_list', None)
+    d_in = len(feature_list) if feature_list else 6
+    if not dist.is_available() or not dist.is_initialized() or dist.get_rank() == 0:
+        print(f"Feature list: {feature_list}, d_in: {d_in}")
+
     train_dataset = CustomKlineDataset(
         data_path=config.data_path,
         data_type='train',
@@ -191,9 +197,10 @@ def create_dataloaders(config):
         seed=config.seed,
         train_ratio=config.train_ratio,
         val_ratio=config.val_ratio,
-        test_ratio=config.test_ratio
+        test_ratio=config.test_ratio,
+        feature_list=feature_list
     )
-    
+
     val_dataset = CustomKlineDataset(
         data_path=config.data_path,
         data_type='val',
@@ -203,7 +210,8 @@ def create_dataloaders(config):
         seed=config.seed + 1,
         train_ratio=config.train_ratio,
         val_ratio=config.val_ratio,
-        test_ratio=config.test_ratio
+        test_ratio=config.test_ratio,
+        feature_list=feature_list
     )
     
     use_ddp = dist.is_available() and dist.is_initialized()

@@ -15,7 +15,7 @@ class Config:
 
         # Overall time range for data loading from Qlib.
         self.dataset_begin_time = "2011-01-01"
-        self.dataset_end_time = '2025-06-05'
+        self.dataset_end_time = '2026-08-05'
 
         # Sliding window parameters for creating samples.
         self.lookback_window = 90  # Number of past time steps for input.
@@ -76,9 +76,9 @@ class Config:
         self.comet_config = {
             # It is highly recommended to load secrets from environment variables
             # for security purposes. Example: os.getenv("COMET_API_KEY")
-            "api_key": "YOUR_COMET_API_KEY",
-            "project_name": "Kronos-Finetune-Demo",
-            "workspace": "your_comet_workspace" # TODO: Change to your Comet ML workspace name
+            "api_key": "bDjN5o3A6cMfm8NblhPoN4aqP",
+            "project_name": "test",
+            "workspace": "tsf15011043430" # TODO: Change to your Comet ML workspace name
         }
         self.comet_tag = 'finetune_demo'
         self.comet_name = 'finetune_demo'

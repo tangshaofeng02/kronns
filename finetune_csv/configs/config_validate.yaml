@@ -1,0 +1,65 @@
+# 验证训练流程配置 (d_in=6, 先跑1个epoch)
+# 等资金流数据到位后切换到 config_fund_flow.yaml
+
+data:
+  data_path: "../finetune_csv/data/stock_with_fund_flow.csv"
+  feature_list:
+    - open
+    - high
+    - low
+    - close
+    - volume
+    - amount
+  lookback_window: 120
+  predict_window: 10
+  max_context: 512
+  clip: 5.0
+  train_ratio: 0.85
+  val_ratio: 0.15
+  test_ratio: 0.0
+
+training:
+  tokenizer_epochs: 1
+  basemodel_epochs: 1
+  batch_size: 32
+  log_interval: 20
+  num_workers: 0
+  seed: 42
+
+  tokenizer_learning_rate: 0.0002
+  predictor_learning_rate: 0.00004
+
+  adam_beta1: 0.9
+  adam_beta2: 0.95
+  adam_weight_decay: 0.1
+
+  accumulation_steps: 1
+
+model_paths:
+  pretrained_tokenizer: "../pretrained/Kronos-Tokenizer-base"
+  pretrained_predictor: "../pretrained/Kronos-base"
+
+  exp_name: "validate_finetune"
+  base_path: "../finetune_csv/finetuned/"
+
+  base_save_path: ""
+  finetuned_tokenizer: ""
+
+  tokenizer_save_name: "tokenizer"
+  basemodel_save_name: "basemodel"
+
+experiment:
+  name: "kronos_validate_finetune"
+  description: "验证训练流程(d_in=6, 1 epoch)"
+  use_comet: false
+
+  train_tokenizer: true
+  train_basemodel: true
+  skip_existing: false
+
+  pre_trained_tokenizer: false
+  pre_trained_predictor: false
+
+device:
+  use_cuda: false
+  device_id: 0
